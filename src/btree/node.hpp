@@ -7,7 +7,7 @@ class BtreeNode {
 public:
     BtreeNode(bool isLeaf);
 
-    void addDataItem(int newItem); // add a data item to the current btree node
+    void addDKey(int newItem); // add a data item to the current btree node
     void addChildNode(unique_ptr<BtreeNode> newNode); // add a btree node to children array
 
     int findKeyIndex(int64_t key) const; // find index of key location
@@ -16,7 +16,7 @@ public:
     bool isFull() const;
     bool isMinimal() const;
     bool isLead() const;
-    int getNumDataItems() const;
+    int getNumKeys() const;
 
     int64_t getKey(int index) const;
     BtreeNode* getChild(int index) const;
@@ -35,11 +35,11 @@ public:
     void fill(int index); // fixes node underflow
 private:
     bool isLeaf;
-    int64_t numDataItems;
-    vector<int> dataItems;
+    int64_t numKeys;
+    vector<int> keys;
     vector<unique_ptr<BtreeNode>> childNodes;
 
     static const int ORDER = 10;
     static const int MAX_KEYS = ORDER - 1;
-    static const int MIN_KEYS = (ORDER - 1 ) / 2;
+    static const int MIN_KEYS = (ORDER - 1) / 2;
 }
