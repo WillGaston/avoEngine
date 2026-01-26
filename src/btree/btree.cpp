@@ -86,15 +86,54 @@ Btree::remove(int64_t key) {
         if (!root->isLeaf()) {
             BtreeNode *oldRoot = root;
             root = root->getChild(0);
-            // remove oldRoot
         } else {
             root.reset();
         }
     }
+
+    this->count--;
 }
 
 Btree::removeRecurse(BtreeNode* node, int64_t key) {
+    int index = node->findKeyIndex(key);
 
+    if (index < node->getNumKeys() && node->getKey(index) == key) {
+        if (node->isLeaf()) {
+            node->removeKey(index);
+        } else {
+            BtreeNode *leftChild = node->getChild(index);
+            BtreeNode *rightChild = node->getChild(index + 1);
+
+            if (!leftChild->isMinimal()) {
+                int64_t predKey = node->getPredecessor(index);
+                node->replaceKey(index, predKey);
+                removeRecurse(leftChild, predKey);
+            } else (!rightChild->isMinimal()) {
+                int64_t succKey = node->getSuccessor(index);
+                node->replaceKey(index, succKey);
+                removeRecurse(rightChild, succKey);
+            } else {
+                node->merge(index);
+                removeRecurse(leftChild, key);
+            }
+        }
+    } else {
+        if (node->isLeaf()) return;
+
+        bool isInLastChild = index == node->getNumKeys();
+        BtreeNode *child = node->getChild(index);   
+        
+        if (child->isMinimal()) {
+            node->fill(index);
+            if (isInLastChild && index > node->getNumKeys()) index--;
+            if (index < node->getNumKeys() && node->getKey(index) == key) {
+                removeRecurse(node, key);
+                return;
+            } 
+        }
+
+        removeRecurse(node->getChild(index), key);
+    }
 }
 
 Btree::traverse() {

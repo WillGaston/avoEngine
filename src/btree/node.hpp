@@ -7,7 +7,7 @@ class BtreeNode {
 public:
     BtreeNode(bool isLeaf);
 
-    void addDKey(int newItem); // add a data item to the current btree node
+    void addKey(int newItem); // add a data item to the current btree node
     void addChildNode(unique_ptr<BtreeNode> newNode); // add a btree node to children array
 
     int findKeyIndex(int64_t key) const; // find index of key location
@@ -15,15 +15,17 @@ public:
 
     bool isFull() const;
     bool isMinimal() const;
-    bool isLead() const;
+    bool isLeaf() const;
     int getNumKeys() const;
 
     int64_t getKey(int index) const;
     BtreeNode* getChild(int index) const;
 
-    unique_ptr<BtreeNode> split(int& medianKey); // returns right half
+    unique_ptr<BtreeNode> split(); // returns right half
 
     void insertNotFull(int64_t key);
+    void insertKeyAt(int index, int64_t key);
+    void insertChildAt(int index, unique_ptr<BtreeNode> child);
 
     void removeKey(int index);
     void removeChild(int index);
