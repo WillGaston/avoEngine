@@ -1,17 +1,20 @@
 #include <vector>
 #include <memory>
+#include <memory>
 
 using namespace std;
 
+#pragma once
+
 class BtreeNode {
 public:
-    BtreeNode(bool isLeaf);
+    BtreeNode(bool leaf);
 
     void addKey(int newItem); // add a data item to the current btree node
     void addChildNode(unique_ptr<BtreeNode> newNode); // add a btree node to children array
 
-    int findKeyIndex(int64_t key) const; // find index of key location
-    bool containsKey(int64_t key) const; // check if key exists
+    int findKeyIndex(int64_t key); // find index of key location
+    bool containsKey(int64_t key); // check if key exists
 
     bool isFull() const;
     bool isMinimal() const;
@@ -21,7 +24,7 @@ public:
     int64_t getKey(int index) const;
     BtreeNode* getChild(int index) const;
 
-    unique_ptr<BtreeNode> split(); // returns right half
+    pair<unique_ptr<BtreeNode>, int64_t> split();
 
     void insertNotFull(int64_t key);
     void insertKeyAt(int index, int64_t key);
@@ -29,14 +32,14 @@ public:
 
     void removeKey(int index);
     void removeChild(int index);
-    int64_t getPredecessor(int index) const;
-    int64_t getSuccessor(int index) const;
+    int64_t getPredecessor(int index);
+    int64_t getSuccessor(int index);
     void merge(int index);
     void borrowFromPrev(int index);
     void borrowFromNext(int index);
     void fill(int index); // fixes node underflow
 private:
-    bool isLeaf;
+    bool leaf;
     int64_t numKeys;
     vector<int> keys;
     vector<unique_ptr<BtreeNode>> childNodes;
@@ -44,4 +47,4 @@ private:
     static const int ORDER = 10;
     static const int MAX_KEYS = ORDER - 1;
     static const int MIN_KEYS = (ORDER - 1) / 2;
-}
+};

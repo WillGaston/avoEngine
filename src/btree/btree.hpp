@@ -4,6 +4,8 @@
 
 using namespace std;
 
+#pragma once
+
 class Btree {
 public:
     Btree();
@@ -13,6 +15,7 @@ public:
     void traverse() const;
     int64_t getCount() const;
     int64_t getHeight() const;
+    BtreeNode* getRoot() const;
     bool isEmpty() const;
 private:
     unique_ptr<BtreeNode> root; // root node of the tree
@@ -20,8 +23,8 @@ private:
     int64_t height; // height from root to leaf node
 
     bool findRecurse(BtreeNode* node, int64_t key);
-    int insertRecurse(BtreeNode* node, int64_t key);
+    void insertRecurse(BtreeNode* node, int64_t key);
     void splitChild(BtreeNode* node, int index);
     void removeRecurse(BtreeNode* node, int64_t key);
     void traverseRecurse(const BtreeNode* node) const;
-}
+};
