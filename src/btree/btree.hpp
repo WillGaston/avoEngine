@@ -9,8 +9,8 @@ using namespace std;
 class Btree {
 public:
     Btree();
-    void insert(int64_t key);
-    bool find(int64_t key);     
+    void insert(int64_t key, int64_t value);
+    bool find(int64_t key, int64_t& outValue);     
     void remove(int64_t key);
     void traverse() const;
     int64_t getCount() const;
@@ -23,7 +23,7 @@ private:
     int64_t height; // height from root to leaf node
 
     bool findRecurse(BtreeNode* node, int64_t key);
-    void insertRecurse(BtreeNode* node, int64_t key);
+    void insertRecurse(BtreeNode* node, int64_t key, int64_t value);
     void splitChild(BtreeNode* node, int index);
     void removeRecurse(BtreeNode* node, int64_t key);
     void traverseRecurse(const BtreeNode* node) const;

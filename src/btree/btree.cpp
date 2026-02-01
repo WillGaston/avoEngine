@@ -25,10 +25,10 @@ bool Btree::findRecurse(BtreeNode* root, int64_t key) {
     return findRecurse(root->getChild(index), key);
 }
 
-void Btree::insert(int64_t key) {
+void Btree::insert(int64_t key, int64_t value) {
     if (!root) {
         root = make_unique<BtreeNode>(true);
-        root->addKey(key);
+        root->addKey(key, value);
         this->height = 1;
         this->count = 1;
         return; 
@@ -42,13 +42,13 @@ void Btree::insert(int64_t key) {
         height++;
     }
 
-    insertRecurse(this->root.get(), key);
+    insertRecurse(this->root.get(), key, value);
     this->count++;
 }
 
-void Btree::insertRecurse(BtreeNode* node, int64_t key) {
+void Btree::insertRecurse(BtreeNode* node, int64_t key, int64_t value) {
     if (node->isLeaf()) {
-        node->addKey(key);
+        node->addKey(key, value);
         return;
     }
 
@@ -61,13 +61,14 @@ void Btree::insertRecurse(BtreeNode* node, int64_t key) {
         if (key > node->getKey(index)) index++;
     }
 
-    insertRecurse(node->getChild(index), key);
+    insertRecurse(node->getChild(index), key, value);
 }
 
 void Btree::splitChild(BtreeNode* node, int index) {
     BtreeNode *fullChild = node->getChild(index);
     auto [rightChild, medianKey] = fullChild->split();
-    node->insertKeyAt(index, medianKey);
+    int64_t medianValue = fullChild->getValue(fullChild->getNumKeys() - 1);
+    node->insertKeyAt(index, medianKey, medianValue);
     node->insertChildAt(index + 1, move(rightChild));
 }
  
@@ -101,9 +102,10 @@ void Btree::removeRecurse(BtreeNode* node, int64_t key) {
 
             if (!leftChild->isMinimal()) {
                 int64_t predKey = node->getPredecessor(index);
+                int64_t predValue = leftChild->getValue(leftChild->getNumKeys() - 1);
                 node->removeKey(index);
-                node->insertKeyAt(index, predKey);
-                removeRecurse(leftChild, predKey);
+                node->insertKeyAt(index, predKey, predValue);
+                removeRecurse(leftChild, predKey, predValue);
             } else if (!rightChild->isMinimal()) {
                 int64_t succKey = node->getSuccessor(index);
                 node->removeKey(index);

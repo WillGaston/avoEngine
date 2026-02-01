@@ -3,7 +3,6 @@
 #include <iostream>
 #include <stdexcept>
 
-
 Pager::Pager(const string& filename): fileName(filename), numPages(0) {
     openFile();
 }

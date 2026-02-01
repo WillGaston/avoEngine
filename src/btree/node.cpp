@@ -8,10 +8,11 @@ BtreeNode::BtreeNode(bool leaf) : leaf(leaf), numKeys(0) {
     if (!leaf) childNodes.reserve(ORDER);
 }
 
-void BtreeNode::addKey(int newKey) {
+void BtreeNode::addKey(int64_t newKey, int64_t newValue) {
     int index = 0;
     while (index < numKeys && this->keys[index] < newKey) index++;
     keys.insert(keys.begin() + index, newKey);
+    values.insert(values.begin() + index, newValue);
     numKeys++;
 }
 
@@ -37,15 +38,20 @@ bool BtreeNode::isLeaf() const { return this->leaf; }
 int BtreeNode::getNumKeys() const { return numKeys; }
 
 int64_t BtreeNode::getKey(int index) const { return keys[index]; }
+int64_t BtreeNode::getValue(int index) const { return values[index]; }
 BtreeNode* BtreeNode::getChild(int index) const { return childNodes[index].get(); }
 
 pair<unique_ptr<BtreeNode>, int64_t> BtreeNode::split() {
     int midIndex = MAX_KEYS / 2;
     int64_t medianKey = keys[midIndex];
+    int64_t medianValue = values[midIndex];
 
     auto rightNode = make_unique<BtreeNode>(leaf);
 
-    for (int i = midIndex + 1; i < numKeys; i++) rightNode->keys.push_back(keys[i]);
+    for (int i = midIndex + 1; i < numKeys; i++) {
+        rightNode->keys.push_back(keys[i]);
+        rightNode->values.push_back(values[i]);
+    }
     rightNode->numKeys = numKeys - midIndex - 1;
 
     if (!isLeaf()) {
@@ -54,13 +60,15 @@ pair<unique_ptr<BtreeNode>, int64_t> BtreeNode::split() {
     }
 
     keys.resize(midIndex);
+    values.resize(midIndex);
     numKeys = midIndex;
 
     return {move(rightNode), medianKey};
 }
 
-void BtreeNode::insertKeyAt(int index, int64_t key) {
+void BtreeNode::insertKeyAt(int index, int64_t key, int64_t value) {
     keys.insert(keys.begin() + index, key);
+    values.insert(values.begin() + index, value);
     numKeys++;
 }
 
@@ -70,6 +78,7 @@ void BtreeNode::insertChildAt(int index, unique_ptr<BtreeNode> child) {
 
 void BtreeNode::removeKey(int index) {
     keys.erase(keys.begin() + index);
+    values.erase(values.begin() + index);
     numKeys--;
 }
 
@@ -98,8 +107,12 @@ void BtreeNode::merge(int index) {
     BtreeNode *rightChild = childNodes[index + 1].get();
 
     leftChild->keys.push_back(keys[index]);
+    leftChild->values.push_back(values[index]);
 
-    for (int i = 0; i < rightChild->numKeys; i++) leftChild->keys.push_back(rightChild->keys[i]);
+    for (int i = 0; i < rightChild->numKeys; i++) {
+        leftChild->keys.push_back(rightChild->keys[i]);
+        leftChild->values.push_back(rightChild->values[i]);
+    }
 
     if (!leftChild->isLeaf()) {
         for (int i = 0; i <= rightChild->numKeys; i++) leftChild->childNodes.push_back(move(rightChild->childNodes[i]));
@@ -108,6 +121,7 @@ void BtreeNode::merge(int index) {
     leftChild->numKeys += rightChild->numKeys + 1;
 
     keys.erase(keys.begin() + index);
+    values.erase(values.begin() + index);
     numKeys--;
 
     childNodes.erase(childNodes.begin() + index + 1);
