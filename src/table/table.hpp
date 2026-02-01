@@ -18,7 +18,7 @@ public:
     ~Table();
 
     bool insert(int64_t key, const vector<uint8_t>& data);
-    vector<int8_t> find(int64_t key);
+    vector<uint8_t> find(int64_t key);
     bool remove(int64_t key);
     int64_t getRowCount() const;
     int64_t getHeight() const;
