@@ -23,14 +23,14 @@ struct PageHeader {
 };
 
 struct SlotEntry {
-    uint16_t offset;
-    uint16_t length;
+    uint32_t offset;
+    uint32_t length; // set to 0 if tombstone
     uint16_t flags; // for future use :) e.g. mvcc
     uint16_t padding;
 };
 
 static_assert(sizeof(PageHeader) == 16);
-static_assert(sizeof(SlotEntry) == 8);
+static_assert(sizeof(SlotEntry) == 12);
 
 static constexpr uint32_t PAGE_HEADER_SIZE = sizeof(PageHeader);
 static constexpr uint32_t SLOT_ENTRY_SIZE = sizeof(SlotEntry);
@@ -48,7 +48,10 @@ public:
     uint16_t getFreeSpace(); // get the amount of free space available
     uint16_t actualDataSize(); // get non-tombestoned data size
     bool shouldCompact(); // check if dead space crossed threshold
-    bool isSlotAlive(); // check if slot is tombstoned
+    bool isSlotAlive(int slotIndex); // check if slot is tombstoned
+
+    uint16_t getNumSlots();
+    uint32_t getPageNum();
 private:
     Page *page;
 
@@ -59,7 +62,7 @@ private:
     void writeSlot(int slotIndex, const SlotEntry &slot);
 
     // btree address encoding (32 bit pageNum, 32 bit slotindex)
-    int64_t encodeRowAddress(uint32_t pageNum, uint32_t slotIndex);
+    uint64_t encodeRowAddress(uint32_t pageNum, uint32_t slotIndex);
     uint32_t getPageNum(uint64_t encodedAddress);
     uint32_t getSlotIndex(uint64_t encodedAddress);
 };
