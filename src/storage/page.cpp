@@ -16,10 +16,14 @@ void Page::writeData(uint32_t offset, const void *data, uint32_t size) {
 void Page::readData(uint32_t offset, void *buffer, uint32_t size) const {
     if (offset + size > PAGE_SIZE) throw out_of_range("Read exceeds page size");
 
-    memcpy(buffer, this->data.data() + offset size);
+    memcpy(buffer, this->data.data() + offset, size);
 }
 
-const uint8_t Page::getData() const {
+const uint8_t* Page::getData() const {
+    return data.data();
+}
+
+uint8_t* Page::getData() {
     return data.data();
 }
 

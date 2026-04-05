@@ -25,9 +25,8 @@ private:
     string fileName;
     fstream file;
     map<uint32_t, unique_ptr<Page>> pageCache;
-    int32_t numPages;
+    uint32_t numPages;
 
     void readPageFromDisk(uint32_t pageNum, Page *page);
-    void writePage(uint32_t pageNum, Page *page);
     void openFile();
 };

@@ -2,10 +2,10 @@
 
 Table::Table(const string& fileName) {
     try {
-        pager = make_unqiue<Pager>(fileName);
+        pager = make_unique<Pager>(fileName);
         btree = make_unique<Btree>();
     } catch (const exception &e) {
-        cerr << "Error opening table: " << e.what() << endl;
+        std::cout << "Error opening table: " << e.what() << endl;
         throw;
     }
 }
@@ -18,9 +18,9 @@ bool Table::insert(int64_t key, const vector<uint8_t>& data) {
     try {
         int64_t dummy = 0;
 
-        if (!btree->find(key, dummy)) {
-            cerr << "Key ( " << key << " ) not found" << endl;
-            return {};
+        if (btree->find(key, dummy)) {
+            cerr << "Key ( " << key << " ) already exists" << endl;
+            return false;
         }
     
         int64_t offset = writeDataToDisk(data);
@@ -28,7 +28,7 @@ bool Table::insert(int64_t key, const vector<uint8_t>& data) {
         return true;
     } catch (exception &e) {
         cerr << "Error inserting key: " << key << ": " << e.what() << endl;
-        return {};
+        return false;
     }
 }
 
@@ -89,21 +89,21 @@ vector<uint8_t> Table::serializeData(const vector<uint8_t>& data) {
     serialized.push_back((length >> 8) & 0xFF);
     serialized.push_back(length & 0xFF);
 
-    serialized.insert(serialized.end(), data.begin(); data.end());
+    serialized.insert(serialized.end(), data.begin(), data.end());
     return serialized;
 }
 
 vector<uint8_t> Table::deserializeData(const vector<uint8_t>& serializedData) {
     if (serializedData.size() < 4) throw runtime_error("Invalid serialized data format: Too small");
 
-    uint32_t length = ((uint32_t)serialized[0] << 24) |
-                        ((uint32_t)serialized[1] << 16) |
-                        ((uint32_t)serialized[2] << 8) |
-                        ((uint32_t)serialized[3]);
+    uint32_t length = ((uint32_t)serializedData[0] << 24) |
+                        ((uint32_t)serializedData[1] << 16) |
+                        ((uint32_t)serializedData[2] << 8) |
+                        ((uint32_t)serializedData[3]);
 
-    if (4 + length > serialized.size()) throw runtime_error("Invalid serialized data format: Length does not match");
+    if (4 + length > serializedData.size()) throw runtime_error("Invalid serialized data format: Length does not match");
 
-    vector<uint8_t> data(serialized.begin() + 4, serialized.begin() + 4 + length);
+    vector<uint8_t> data(serializedData.begin() + 4, serializedData.begin() + 4 + length);
     return data;
 }
 
@@ -111,19 +111,19 @@ int64_t Table::writeDataToDisk(const vector<uint8_t>& data) {
     vector<uint8_t> serializedData = serializeData(data);
     uint32_t numBytes = serializedData.size();
 
-    uint32_t numPagesNeeded = (totalBytes + PAGE_SIZE - 1) / PAGE_SIZE;
-    uint32_t startPage = pager.allocatePage();
+    uint32_t numPagesNeeded = (numBytes + PAGE_SIZE - 1) / PAGE_SIZE;
+    uint32_t startPage = pager->allocatePage();
     int64_t startOffset = (int64_t)startPage * PAGE_SIZE;
 
     uint32_t bytesWritten = 0;
     for (uint32_t i = 0; i < numPagesNeeded; i++) {
         Page *page = pager->getPage(startPage + i);
-        uint32_t bytesToWrite((uint32_t)PAGE_SIZE, totalBytes - bytesWritten);
+        uint32_t bytesToWrite = min((uint32_t)PAGE_SIZE, numBytes - bytesWritten);
         uint32_t offsetInPage = 0;
 
         try {
             page->writeData(offsetInPage, serializedData.data() + bytesWritten, bytesToWrite);
-            pages->writePage(startPage + i, page);
+            pager->writePageToDisk(startPage + i, page);
         } catch (const exception &e) {
             cerr << "Error writing page: " << e.what() << endl;
             throw;
@@ -141,22 +141,22 @@ vector<uint8_t> Table::readDataFromDisk(int64_t offset) {
     uint32_t pageNum = offset / PAGE_SIZE;
     uint32_t offsetInPage = offset % PAGE_SIZE;
 
-    Page *page = pager.getPage(pageNum);
-    if (!page) throw runtime_error("failed to get page: " + to_string(pageNum));
+    Page *page = pager->getPage(pageNum);
+    if (!page) throw runtime_error("Failed to get page: " + to_string(pageNum));
 
-    uint32_t length = 0;
-    try {
-        page->readData(offsetInPage, &length, 4);
-    } catch (const exception &e) {
-        cerr << "Error reading length prefix: " << e.what() << endl;
-        throw;
-    }
+    // Read length prefix manually to handle big-endian byte order
+    uint8_t lenBytes[4];
+    page->readData(offsetInPage, lenBytes, 4);
+    uint32_t length = ((uint32_t)lenBytes[0] << 24) |
+                      ((uint32_t)lenBytes[1] << 16) |
+                      ((uint32_t)lenBytes[2] << 8)  |
+                      ((uint32_t)lenBytes[3]);
 
     vector<uint8_t> serializedData(4 + length);
-    serializedData[0] = (length >> 24) & 0xFF;
-    serializedData[1] = (length >> 16) & 0xFF;
-    serializedData[2] = (length >> 8) & 0xFF;
-    serializedData[3] = length & 0xFF;
+    serializedData[0] = lenBytes[0];
+    serializedData[1] = lenBytes[1];
+    serializedData[2] = lenBytes[2];
+    serializedData[3] = lenBytes[3];
 
     uint32_t bytesRead = 0;
     uint32_t currentPage = pageNum;
@@ -169,21 +169,16 @@ vector<uint8_t> Table::readDataFromDisk(int64_t offset) {
         }
 
         page = pager->getPage(currentPage);
-        if (!page) throw runtime_error("Failed to get page" + to_string(currentPage));
+        if (!page) throw runtime_error("Failed to get page: " + to_string(currentPage));
 
         uint32_t bytesAvailableInPage = PAGE_SIZE - currentOffset;
-        uint32_t bytesToReadInPage = min(bytesAvailableInPage, length - bytesRead);
+        uint32_t bytesToRead = min(bytesAvailableInPage, length - bytesRead);
 
-        try {
-            page->readData(currentOffset, serializedData.data() + 4 + bytesRead, bytesToReadInPage);
-        } catch (const exception &e) {
-            cerr << "Error reading from page: " << e.what() << endl;
-            throw;
-        }
+        page->readData(currentOffset, serializedData.data() + 4 + bytesRead, bytesToRead);
 
-        bytesRead += bytesToReadInPage;
-        currentOffset += bytesToReadInPage;
+        bytesRead += bytesToRead;
+        currentOffset += bytesToRead;
     }
 
-    return deserializedData(serializedData);
+    return deserializeData(serializedData);
 }

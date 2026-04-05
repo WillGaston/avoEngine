@@ -3,7 +3,7 @@
 
 using namespace std;
 
-Btree::Btree() : root(nullptr), height(0), count(0) {}
+Btree::Btree() : root(nullptr), count(0), height(0) {}
 
 BtreeNode* Btree::getRoot() const { return root.get(); }
 
@@ -13,16 +13,19 @@ int64_t Btree::getCount() const { return this->count; }
 
 bool Btree::isEmpty() const { return root == nullptr; }
 
-bool Btree::find(int64_t key) {
+bool Btree::find(int64_t key, int64_t& outValue) {
     if (!root) return false;
-    return findRecurse(root.get(), key);
+    return findRecurse(root.get(), key, outValue);
 }
 
-bool Btree::findRecurse(BtreeNode* root, int64_t key) {
+bool Btree::findRecurse(BtreeNode* root, int64_t key, int64_t& outValue) {
     int index = root->findKeyIndex(key);
-    if (index < root->getNumKeys() && key == root->getKey(index)) return true;
+    if (index < root->getNumKeys() && key == root->getKey(index)) {
+        outValue = root->getValue(index);
+        return true;
+    }
     if (root->isLeaf()) return false;
-    return findRecurse(root->getChild(index), key);
+    return findRecurse(root->getChild(index), key, outValue);
 }
 
 void Btree::insert(int64_t key, int64_t value) {
@@ -105,11 +108,12 @@ void Btree::removeRecurse(BtreeNode* node, int64_t key) {
                 int64_t predValue = leftChild->getValue(leftChild->getNumKeys() - 1);
                 node->removeKey(index);
                 node->insertKeyAt(index, predKey, predValue);
-                removeRecurse(leftChild, predKey, predValue);
+                removeRecurse(leftChild, predKey);
             } else if (!rightChild->isMinimal()) {
                 int64_t succKey = node->getSuccessor(index);
+                int64_t succValue = rightChild->getValue(0); 
                 node->removeKey(index);
-                node->insertKeyAt(index, succKey);
+                node->insertKeyAt(index, succKey, succValue);
                 removeRecurse(rightChild, succKey);
             } else {
                 node->merge(index);

@@ -8,7 +8,7 @@ Pager::Pager(const string& filename): fileName(filename), numPages(0) {
 }
 
 Pager::~Pager() {
-    flushall();
+    flushAll();
     if (file.is_open()) file.close();
 }
 
@@ -26,21 +26,23 @@ Page *Pager::getPage(uint32_t pageNum) {
 }
 
 void Pager::readPageFromDisk(uint32_t pageNum, Page *page) {
-    file.seekg(pageNum * pageSize);
-    file.read(reinterpre_cast<char *>(page->getData()), PAGE_SIZE);
-
-    if (file.fail() || !file.eof()) throw runtime_error("Failed to read page from disk");
-
+    file.clear();
+    file.seekg(pageNum * PAGE_SIZE);
+    file.read(reinterpret_cast<char*>(page->getData()), PAGE_SIZE);
+    if (file.bad()) throw runtime_error("Failed to read page from disk");
+    file.clear();  // clear eof flag for future reads
     if (page->isDirty()) page->toggleDirty();
 }
 
 void Pager::writePageToDisk(uint32_t pageNum, Page *page) {
     if (!page) throw invalid_argument("page pointer is null");
-    file.seekp(pageNum * pageSize);
-    file.read(reinterpre_cast<char *>(page->getData()), PAGE_SIZE);
+    file.clear();
+    file.seekp(pageNum * PAGE_SIZE);
 
-    if (file.fail() || !file.eof()) throw runtime_error("Failed to read page from disk");
-
+    file.write(reinterpret_cast<char*>(page->getData()), PAGE_SIZE);
+    if (file.fail()) {
+        throw runtime_error("Failed to write page to disk");
+    }
     if (page->isDirty()) page->toggleDirty();
 }
 

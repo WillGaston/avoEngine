@@ -22,7 +22,7 @@ private:
     int64_t count; //  num items
     int64_t height; // height from root to leaf node
 
-    bool findRecurse(BtreeNode* node, int64_t key);
+    bool findRecurse(BtreeNode* node, int64_t key, int64_t& outValue);
     void insertRecurse(BtreeNode* node, int64_t key, int64_t value);
     void splitChild(BtreeNode* node, int index);
     void removeRecurse(BtreeNode* node, int64_t key);

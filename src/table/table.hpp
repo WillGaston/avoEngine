@@ -1,5 +1,6 @@
 #include <vector>
 #include <memory>
+#include <iostream>
 #include "btree.hpp"
 #include "pager.hpp"
 
@@ -25,7 +26,7 @@ public:
     void close();
 private:
     unique_ptr<Btree> btree;
-    unqiue_ptr<Pager> pager;
+    unique_ptr<Pager> pager;
 
     vector<uint8_t> serializeData(const vector<uint8_t>& data);
     vector<uint8_t> deserializeData(const vector<uint8_t>& serializedData);
