@@ -28,8 +28,12 @@ uint32_t LinHashManager::getNumTuples() {
     return header.numTuples;
 }
 
-uint32_t LinHashManager::getChoiceVector() {
+ChoiceVector LinHashManager::getChoiceVector() {
     return header.choiceVector;
+}
+
+uint32_t LinHashManager::getNumAttributes() {
+    return header.numAttributes;
 }
 
 void LinHashManager::split() {
@@ -44,7 +48,9 @@ void LinHashManager::merge() {
 }
 
 void LinHashManager::redistribute() {
-
+    // add new page
+    // create array of tuples
+    // add tuples to the pages
 }
 
 void LinHashManager::contract() {

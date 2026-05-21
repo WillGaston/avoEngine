@@ -6,6 +6,7 @@
 #include <memory>
 #include <fstream>
 #include "../storage/pager.hpp"
+#include "./choiceVector.hpp"
 
 using namespace std;
 
@@ -14,12 +15,13 @@ struct LinHashHeader {
     uint32_t sp;
     uint32_t numBuckets;
     uint32_t numTuples;
+    uint32_t numAttributes;
     uint32_t loadThreshold;
     uint32_t mergeThreshold;
 
     uint32_t insertsSinceSplit;
     uint32_t deletesSinceMerge;
-    uint32_t choiceVector;
+    ChoiceVector choiceVector;
 };
 
 class LinHashManager {
@@ -32,7 +34,8 @@ public:
     uint32_t getSplitPtr();
     uint32_t getNumBuckets();
     uint32_t getNumTuples();
-    uint32_t getChoiceVector();
+    ChoiceVector getChoiceVector();
+    uint32_t getNumAttributes();
 private:
     Pager *dataPager;
     Pager *overflowPager;
