@@ -36,6 +36,8 @@ public:
     uint32_t getNumTuples();
     ChoiceVector getChoiceVector();
     uint32_t getNumAttributes();
+
+    uint32_t hashToPage(uint32_t bits);
 private:
     Pager *dataPager;
     Pager *overflowPager;
@@ -46,4 +48,5 @@ private:
     void redistribute();
     void contract();
     void freeEmptyOverflow();
+    uint32_t getLower(uint32_t bits, uint32_t num);
 };
