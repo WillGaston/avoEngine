@@ -68,20 +68,37 @@ void LinHashManager::contract() {
         header.sp--;
     }
 
-    //todo
+    uint32_t currId = lastBucketId;
+    bool isOvflowPage = false;
+
+    while (currId != NO_PAGE) {
+        Page *rawPage = isOvflowPage ? overflowPager->getPage(currId) ? dataPager->getPage(currId);
+        SlottedPage sPage = SlottedPage(rawPage);
+        uint32_t nextId = sPage.getOvflow(); // need to add
+        uint32_t numInPage = sPage.getNumSlots();
+
+        for (int i = 0; i < numInPage; i++) {
+            if (!sPage.isSlotAlive(i)) continue;
+            uint32_t tupLength = sPage.getTupLen(i);
+            vector<uint8_t> buf(tupLength);
+            sPage.getTuple(i, buf.data(), tupLength);
+        }
+
+        currId = nextId;
+        isOvflowPage = true;
+    }
+
+    dataPager->removePage();
+    header.numBuckets--;
+    header.deletesSinceMerge -= header.mergeThreshold;
 }
 
 uint32_t LinHashManager::hashToPage(uint32_t bits) {
     LinHashHeader header = this->header;
     uint32_t p;
-    if (header.depth == 0)
-        p = 0;
-    else
-        p = getLower(bits, header.depth);
-
-    if (p < header.sp)
-        p = getLower(bits, header.depth + 1);
-
+    if (header.depth == 0) p = 0;
+    else p = getLower(bits, header.depth);
+    if (p < header.sp) p = getLower(bits, header.depth + 1);
     return p;
 }
 

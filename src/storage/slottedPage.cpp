@@ -156,3 +156,13 @@ uint32_t ::getPageNum(uint64_t encodedAddress) {
 uint32_t SlottedPage::getSlotIndex(uint64_t encodedAddress) {
      return static_cast<uint32_t>(encodedAddress & 0xFFFFFFFF);
 }
+
+uint32_t SlottedPage::getOvflow() { 
+    return readPageHeader().ovflow;
+}
+
+void SlottedPage::setOvflow(uint32_t pid) {
+    PageHeader ph = readPageHeader();
+    ph.ovflow = pid;
+    writePageHeader(ph);
+}

@@ -6,7 +6,10 @@
 #include <memory>
 #include <fstream>
 #include "../storage/pager.hpp"
+#include "../storage/slottedPage.hpp"
 #include "./choiceVector.hpp"
+
+#define NO_PAGE -1
 
 using namespace std;
 
@@ -18,6 +21,7 @@ struct LinHashHeader {
     uint32_t numAttributes;
     uint32_t loadThreshold;
     uint32_t mergeThreshold;
+    uint32_t ovflowFreeList;
 
     uint32_t insertsSinceSplit;
     uint32_t deletesSinceMerge;
@@ -26,6 +30,8 @@ struct LinHashHeader {
 
 class LinHashManager {
 public:
+    LinHashManager(uint32_t numAttributes, uint32_t loadThreshold, uint32_t mergeThreshold, ChoiceVector choiceVector);
+
     void insert(const uint8_t* tupleData, uint32_t tupleSize);
     void remove(const uint8_t* tupleData, uint32_t tupleSize);
     vector<uint8_t*> search(const uint8_t* keyData, uint32_t key);

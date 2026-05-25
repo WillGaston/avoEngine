@@ -18,6 +18,7 @@ struct PageHeader {
     uint16_t numSlots;
     uint16_t freeSpaceOffset;
     uint16_t endOfTuples;
+    uint32_t ovflow;
     uint16_t checksum; // for future use :)
     uint32_t flags; // for future use :)
 };
@@ -39,8 +40,9 @@ class SlottedPage {
 public:
     SlottedPage(Page *page);
     void init(uint32_t pageNum);
-    int insertTuple(const uint8_t *data, uint16_t length); // returns slot index
-    uint16_t getTuple(int slotIndex, uint8_t *buffer, uint16_t bufferSize);
+    int insertTuple(const uint8_t *data, uint32_t length); // returns slot index
+    uint32_t getTuple(int slotIndex, uint8_t *buffer, uint32_t bufferSize);
+    uint32_t getTupLen(int slotIndex);
     void deleteTuple(int slotIndex);
     void compact();
 
@@ -52,6 +54,9 @@ public:
 
     uint16_t getNumSlots();
     uint32_t getPageNum();
+
+    uint32_t getOvflow();
+    void setOvflow(uint32_t pid);
 private:
     Page *page;
 

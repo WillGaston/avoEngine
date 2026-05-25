@@ -82,3 +82,7 @@ void Pager::openFile() {
     numPages = fileSize / PAGE_SIZE;
     file.seekg(0, ios::beg);
 }
+
+void Pager::removePage() {
+    // todo
+}

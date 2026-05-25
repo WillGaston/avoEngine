@@ -21,6 +21,7 @@ public:
     void close();
     uint32_t getNumPages() const;
     uint32_t allocatePage();
+    void removePage();
 private:
     string fileName;
     fstream file;
