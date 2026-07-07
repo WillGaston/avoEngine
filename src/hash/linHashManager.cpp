@@ -72,7 +72,7 @@ void LinHashManager::contract() {
     bool isOvflowPage = false;
 
     while (currId != NO_PAGE) {
-        Page *rawPage = isOvflowPage ? overflowPager->getPage(currId) ? dataPager->getPage(currId);
+        Page *rawPage = isOvflowPage ? overflowPager->getPage(currId) : dataPager->getPage(currId);
         SlottedPage sPage = SlottedPage(rawPage);
         uint32_t nextId = sPage.getOvflow(); // need to add
         uint32_t numInPage = sPage.getNumSlots();

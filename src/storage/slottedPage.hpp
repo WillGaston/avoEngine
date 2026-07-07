@@ -30,7 +30,7 @@ struct SlotEntry {
     uint16_t padding;
 };
 
-static_assert(sizeof(PageHeader) == 16);
+static_assert(sizeof(PageHeader) == 20);
 static_assert(sizeof(SlotEntry) == 12);
 
 static constexpr uint32_t PAGE_HEADER_SIZE = sizeof(PageHeader);

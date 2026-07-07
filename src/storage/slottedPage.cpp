@@ -21,7 +21,7 @@ void SlottedPage::init(uint32_t pageNum) {
 }
 
 // return slot index or -1,. also throws exceptions if necessary
-int SlottedPage::insertTuple(const uint8_t *data, uint16_t length) {
+int SlottedPage::insertTuple(const uint8_t *data, uint32_t length) {
     if (!data) throw invalid_argument("null data on tuple insert - slotted page");
     
     PageHeader header = readPageHeader();
@@ -52,7 +52,7 @@ int SlottedPage::insertTuple(const uint8_t *data, uint16_t length) {
 }
 
 // returns tuple length, tuple data in buffer
-uint16_t SlottedPage::getTuple(int slotIndex, uint8_t *buffer, uint16_t bufferSize) {
+uint32_t SlottedPage::getTuple(int slotIndex, uint8_t *buffer, uint32_t bufferSize) {
     SlotEntry slotEntry = readSlot(slotIndex);
 
     if (slotEntry.length == 0) return 0;
@@ -149,7 +149,7 @@ uint64_t SlottedPage::encodeRowAddress(uint32_t pageNum, uint32_t slotIndex) {
     return (static_cast<int64_t>(pageNum) << 32) | static_cast<int64_t>(slotIndex);
 }
 
-uint32_t ::getPageNum(uint64_t encodedAddress) {
+uint32_t SlottedPage::getPageNum(uint64_t encodedAddress) {
     return static_cast<uint32_t>(encodedAddress >> 32);
 }
 
